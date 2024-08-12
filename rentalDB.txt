@@ -1,0 +1,237 @@
+DROP DATABASE IF EXISTS rentalDB;
+CREATE DATABASE rentalDB;
+USE rentalDB;
+
+CREATE TABLE PropertyManager (
+    ManagerID CHAR(5) UNIQUE NOT NULL,
+    FirstName VARCHAR(60) NOT NULL,
+    LastName VARCHAR(60) NOT NULL,
+    PhoneNumber VARCHAR(10) UNIQUE NOT NULL,
+    StartYear DATE,
+    PRIMARY KEY (ManagerID)
+);
+
+CREATE TABLE RentalProperty (
+    PropertyID INT UNIQUE NOT NULL,
+    PropertyType ENUM('house', 'apartment', 'room') NOT NULL,
+    Street VARCHAR(255) NOT NULL,
+    City VARCHAR(255) NOT NULL,
+    Province CHAR(2) NOT NULL,
+    PostalCode VARCHAR(7) NOT NULL,
+    ApartmentNumber VARCHAR(10),
+    Bedrooms INT NOT NULL,
+    Bathrooms INT NOT NULL,
+    Parking BOOLEAN NOT NULL,
+    Laundry ENUM('ensuite', 'shared') NOT NULL,
+    ListingDate DATE NOT NULL,
+    Accessibility BOOLEAN NOT NULL,
+    CostPerMonth DECIMAL(8, 2) NOT NULL,
+    PropertyManagerID CHAR(5) NOT NULL,
+    PRIMARY KEY(PropertyID),
+    FOREIGN KEY (PropertyManagerID) REFERENCES PropertyManager(ManagerID)
+);
+
+CREATE TABLE House (
+    PropertyID INT UNIQUE NOT NULL,
+    FencedYard BOOLEAN NOT NULL,
+    HouseType ENUM('detached', 'semi') NOT NULL,
+    PRIMARY KEY(PropertyID),
+    FOREIGN KEY (PropertyID) REFERENCES RentalProperty(PropertyID)
+);
+
+CREATE TABLE Apartment (
+    PropertyID INT UNIQUE NOT NULL,
+    Floor INT NOT NULL,
+    Elevator BOOLEAN NOT NULL,
+    PRIMARY KEY(PropertyID),
+    FOREIGN KEY (PropertyID) REFERENCES RentalProperty(PropertyID)
+);
+
+CREATE TABLE Room (
+    PropertyID INT UNIQUE NOT NULL,
+    Occupants INT NOT NULL,
+    KitchenPrivileges BOOLEAN NOT NULL,
+    PRIMARY KEY(PropertyID),
+    FOREIGN KEY (PropertyID) REFERENCES RentalProperty(PropertyID)
+);
+
+
+CREATE TABLE RoomFurnishings (
+    RoomID INT UNIQUE NOT NULL,
+    Furnishings VARCHAR(255), 
+    PRIMARY KEY (RoomID, Furnishings),
+    FOREIGN KEY (RoomID) REFERENCES Room(PropertyID)
+);
+
+CREATE TABLE Owner (
+    OwnerID CHAR(5) UNIQUE NOT NULL,
+    FirstName VARCHAR(60) NOT NULL,
+    LastName VARCHAR(60) NOT NULL,
+    PhoneNumber VARCHAR(10) UNIQUE NOT NULL,
+    PRIMARY KEY (OwnerID)
+);
+
+CREATE TABLE RentalGroup (
+    GroupCode INT(4) UNIQUE NOT NULL,
+    PropertyType ENUM('house', 'apartment', 'room'),
+    Bedrooms INT,
+    Bathrooms INT,
+    Parking BOOLEAN,
+    Laundry ENUM('ensuite', 'shared'),
+    MaxRent DECIMAL(8, 2),
+    Accessibility BOOLEAN,
+    PropertyID INT UNIQUE NOT NULL,
+    LeaseStartDate DATE NOT NULL,
+    LeaseEndDate DATE NOT NULL,
+    TotalMonthlyRent DECIMAL(8, 2) NOT NULL,
+    PRIMARY KEY (GroupCode),
+    FOREIGN KEY (PropertyID) REFERENCES RentalProperty(PropertyID)
+);
+
+CREATE TABLE Student (
+    RenterID CHAR(5) UNIQUE NOT NULL,
+    FirstName VARCHAR(60) NOT NULL,
+    LastName VARCHAR(60) NOT NULL,
+    PhoneNumber VARCHAR(10) UNIQUE NOT NULL,
+    StudentID VARCHAR(20) UNIQUE NOT NULL,
+    GradYear YEAR NOT NULL,
+    Program VARCHAR(255) NOT NULL,
+    GroupCode INT(4) NOT NULL,
+    PRIMARY KEY (RenterID),
+    FOREIGN KEY (GroupCode) REFERENCES RentalGroup(GroupCode) ON DELETE CASCADE
+);
+
+CREATE TABLE OwnsProperties (
+    PropertyID INT NOT NULL,
+    OwnerID CHAR(5) NOT NULL,
+    PRIMARY KEY (PropertyID, OwnerID),
+    FOREIGN KEY (PropertyID) REFERENCES RentalProperty(PropertyID) ON DELETE CASCADE,
+    FOREIGN KEY (OwnerID) REFERENCES Owner(OwnerID) ON DELETE CASCADE
+);
+
+INSERT INTO PropertyManager VALUES
+('PM101', 'John', 'Doe', '1234567890', '2018-01-01'),
+('PM102', 'Jane', 'Smith', '2345678901', '2019-02-01'),
+('PM103', 'Nike', 'Shoes', '3456789012', '2020-03-01'),
+('PM104', 'Emily', 'Davis', '4567890123', '2021-04-01'),
+('PM105', 'Chris', 'Wilson', '5678901234', '2022-05-01'),
+('PM106', 'Pat', 'Taylor', '6789012345', '2023-06-01');
+
+
+INSERT INTO RentalProperty VALUES
+(1, 'house', '123 Main St', 'CityA', 'ON', 'A1A1A1', NULL, 3, 2, TRUE, 'ensuite', '2024-01-01', FALSE, 1200.00, 'PM101'),
+(2, 'apartment', '456 Maple Ave', 'CityB', 'BC', 'B2B2B2', '101', 2, 1, FALSE, 'shared', '2024-02-01', TRUE, 800.00, 'PM102'),
+(3, 'room', '789 Oak Rd', 'CityC', 'QC', 'C3C3C3', NULL, 1, 1, FALSE, 'shared', '2024-03-01', FALSE, 500.00, 'PM103'),
+(4, 'house', '101 Pine Ln', 'CityD', 'MB', 'D4D4D4', NULL, 4, 3, TRUE, 'ensuite', '2024-04-01', TRUE, 1500.00, 'PM104'),
+(5, 'apartment', '202 Birch Pl', 'CityE', 'SK', 'E5E5E5', '202', 3, 2, TRUE, 'ensuite', '2024-05-01', FALSE, 1100.00, 'PM105'),
+(6, 'room', '303 Cedar St', 'CityF', 'NL', 'F6F6F6', NULL, 1, 1, TRUE, 'shared', '2024-06-01', TRUE, 550.00, 'PM106'),
+(7, 'house', '104 Elm St', 'CityG', 'AB', 'G7G7G7', NULL, 3, 2, TRUE, 'ensuite', '2024-07-01', FALSE, 1300.00, 'PM101'),
+(8, 'house', '205 Willow Way', 'CityH', 'PE', 'H8H8H8', NULL, 4, 3, TRUE, 'shared', '2024-08-01', TRUE, 1400.00, 'PM102'),
+(9, 'house', '306 Spruce Ave', 'CityI', 'NT', 'I9I9I9', NULL, 2, 1, FALSE, 'ensuite', '2024-09-01', FALSE, 1100.00, 'PM103'),
+(10, 'house', '407 Pine Ridge', 'CityJ', 'YT', 'J0J0J0', NULL, 5, 3, TRUE, 'shared', '2024-10-01', TRUE, 1600.00, 'PM104'),
+(11, 'apartment', '508 Maple Dr', 'CityK', 'NS', 'K1K1K1', '508', 2, 2, FALSE, 'shared', '2024-11-01', TRUE, 900.00, 'PM105'),
+(12, 'apartment', '609 Birch Blvd', 'CityL', 'NB', 'L2L2L2', '609', 1, 1, TRUE, 'ensuite', '2024-12-01', FALSE, 700.00, 'PM106'),
+(13, 'apartment', '710 Oak Circle', 'CityM', 'NU', 'M3M3M3', '710', 3, 2, TRUE, 'shared', '2025-01-01', TRUE, 950.00, 'PM101'),
+(14, 'apartment', '811 Cedar Ln', 'CityN', 'ON', 'N4N4N4', '811', 2, 1, FALSE, 'ensuite', '2025-02-01', FALSE, 850.00, 'PM102'),
+(15, 'room', '912 Elm St', 'CityO', 'QC', 'O5O5O5', NULL, 1, 1, TRUE, 'shared', '2025-03-01', TRUE, 600.00, 'PM103'),
+(16, 'room', '1013 Willow Way', 'CityP', 'MB', 'P6P6P6', NULL, 1, 1, FALSE, 'ensuite', '2025-04-01', FALSE, 550.00, 'PM104'),
+(17, 'room', '1114 Spruce Ave', 'CityQ', 'SK', 'Q7Q7Q7', NULL, 1, 1, TRUE, 'shared', '2025-05-01', TRUE, 500.00, 'PM105'),
+(18, 'room', '1215 Pine Ridge', 'CityR', 'BC', 'R8R8R8', NULL, 1, 1, FALSE, 'ensuite', '2025-06-01', FALSE, 650.00, 'PM106');
+
+
+INSERT INTO House VALUES
+(1, FALSE,'detached'),
+(4, FALSE,'detached'),
+(7, TRUE, 'detached'),
+(8, FALSE, 'semi'),
+(9, TRUE, 'detached'),
+(10, FALSE, 'semi');
+
+
+INSERT INTO Apartment VALUES
+(2, 11, TRUE),
+(5, 1, TRUE),
+(11, 5, TRUE),
+(12, 4, FALSE),
+(13, 6, TRUE),
+(14, 3, FALSE);
+
+
+INSERT INTO Room VALUES
+(3, 6, FALSE),
+(6, 4,  TRUE), 
+(15, 2, TRUE),
+(16, 1, FALSE),
+(17, 3, TRUE),
+(18, 2, FALSE);
+
+
+INSERT INTO RoomFurnishings (RoomID, Furnishing) VALUES
+(3, 'Bed'),
+(3, 'Desk'),
+(3, 'Chair'),
+(6, 'Bed'),
+(6, 'Wardrobe'),
+(15, 'Bed'),
+(15, 'Desk'),
+(15, 'Chair'),
+(15, 'Bookshelf'),
+(16, 'Bed'),
+(16, 'Wardrobe'),
+(16, 'Dresser'),
+(17, 'Bed'),
+(17, 'Desk'),
+(17, 'Chair'),
+(18, 'Bed'),
+(18, 'Dresser'),
+(18, 'Nightstand');
+
+
+INSERT INTO Owner VALUES
+('OW101', 'Alex', 'Johnson', '9876543210'),
+('OW102', 'Morgan', 'Lee', '8765432109'),
+('OW103', 'Sam', 'Davis', '7654321098'),
+('OW104', 'Casey', 'Martinez', '6543210987'),
+('OW105', 'Jordan', 'Taylor', '5432109876'),
+('OW106', 'Jamie', 'White', '4321098765');
+
+
+INSERT INTO RentalGroup VALUES
+(1001, 'house', 3, 2, TRUE, 'ensuite', 1300.00, FALSE, 1, '2024-01-01', '2024-12-31', 1200.00),
+(1002, 'apartment', 2, 1, FALSE, 'shared', 850.00, TRUE, 2, '2024-02-01', '2024-12-31', 800.00),
+(1003, 'room', 1, 1, FALSE, 'shared', 550.00, FALSE, 3, '2024-03-01', '2024-12-31', 500.00),
+(1004, 'house', 4, 3, TRUE, 'ensuite', 1600.00, TRUE, 4, '2024-04-01', '2024-12-31', 1500.00),
+(1005, 'apartment', 3, 2, TRUE, 'ensuite', 1150.00, FALSE, 5, '2024-05-01', '2024-12-31', 1100.00),
+(1006, 'room', 1, 1, TRUE, 'shared', 600.00, TRUE, 6, '2024-06-01', '2024-12-31', 550.00);
+
+
+INSERT INTO Student VALUES
+('ST101', 'Charlie', 'Brown', '1231231234', 'S123456789', 2025, 'Computer Science', 1001),
+('ST102', 'Robin', 'Green', '2342342345', 'S234567890', 2026, 'Biology', 1002),
+('ST103', 'Jordan', 'Blue', '3453453456', 'S345678901', 2024, 'Mathematics', 1003),
+('ST104', 'Drew', 'Black', '4564564567', 'S456789012', 2027, 'History', 1004),
+('ST105', 'Casey', 'Gray', '5675675678', 'S567890123', 2025, 'Engineering', 1005),
+('ST106', 'Alex', 'White', '6786786789', 'S678901234', 2026, 'Physics', 1006),
+('ST107', 'Grace', 'Odunuga', '4163120006', 's20292380', 2026, 'Computer Science', 1001);
+
+
+INSERT INTO OwnsProperties VALUES
+(1, 'OW101'),
+(2, 'OW102'),
+(3, 'OW103'),
+(4, 'OW104'),
+(5, 'OW105'),
+(6, 'OW106'),
+(7, 'OW101'),
+(8, 'OW102'),
+(9, 'OW103'),
+(10, 'OW104'),
+(11, 'OW105'),
+(12, 'OW106'),
+(13, 'OW101'),
+(14, 'OW102'),
+(15, 'OW103'),
+(16, 'OW104'),
+(17, 'OW105'),
+(18, 'OW106');
+
